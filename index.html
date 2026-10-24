@@ -44,6 +44,8 @@ label{font-size:14px;color:var(--mut)}a{color:var(--td);font-weight:600}
 .i-r{background:var(--r)}.i-a{background:#e0a030}.i-g{background:var(--g)}
 .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:5px;background:#f6edd9;padding:5px;border-radius:16px;margin-bottom:12px}
 .seg button{background:none;color:var(--mut);min-height:42px;padding:6px 2px;font-size:14px;box-shadow:none}.seg button.on{background:#fff;color:var(--td);box-shadow:0 1px 5px rgba(0,0,0,.12)}
+.cats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.cat{display:grid;gap:2px;justify-items:center;align-content:center;min-height:96px;padding:10px 4px;background:#fff;border:1.5px solid var(--line);color:var(--ink);box-shadow:var(--sh)}.cat span{font-size:32px;line-height:1.1}.cat b{font-size:15px}.cat small{color:var(--mut);font-size:12px;font-weight:600}.cat:active{border-color:var(--teal)}
+.it{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:6px}.it b{font-size:14.5px;line-height:1.25;display:block}.it .mut{font-size:12.5px}.cd{display:inline-block;background:#fde8dc;color:#d9531f;border-radius:6px;padding:0 6px;margin-right:6px;font-size:12px}.it .qty{gap:6px;flex:none}.it .qty button{width:34px;min-height:34px;font-size:18px;border-radius:10px}.it .qty b{min-width:20px;font-size:16px;text-align:center}
 .tiles{display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;padding:2px 2px 8px}
 .tiles button{min-width:78px;flex:none;display:grid;gap:2px;justify-items:center;background:#fff;border:1.5px solid var(--line);color:var(--ink);padding:10px 2px;font-size:13px;min-height:68px;box-shadow:var(--sh)}.tiles button span{font-size:24px}
 .tiles button.on{border-color:var(--td);background:#fde8dc;color:var(--td)}
@@ -98,7 +100,7 @@ const cats={in:['Venda','Frete recebido','Outras entradas'],out:['Insumos','Emba
 const EM={Frango:'🍗',Carne:'🥩',Peixe:'🐟',Porco:'🐖',Combos:'🎁',Novidades:'⭐',Outras:'🥗'};
 const titles={home:'Início',new:'Novo pedido',kit:'Cozinha',cli:'Clientes',reg:'Novo cliente',fin:'Financeiro',fre:'Cidades e fretes'};
 const mn=[['home','🏠','Início'],['new','🛒','Novo pedido'],['kit','🍲','Cozinha'],['cli','👥','Clientes'],['fin','💰','Financeiro'],['fre','🚚','Cidades e fretes']];
-let tab='home',back='cli',open=false,ks='ped',draft=nd(),cf=nc(),compra={i:0,q:'',u:'kg',v:''},ms='',mf='todas',is='',inf='todas',ff='todos',cs='',vf='todas',vs='',pq={},cq={},cbf={n:'',q:{},desc:10},lf={t:'in',desc:'',v:'',cat:'Venda',forma:'Pix'},seq=1,cur=null,stream=null,scanOn=false;
+let tab='home',back='cli',open=false,ks='ped',draft=nd(),cf=nc(),compra={i:0,q:'',u:'kg',v:''},ms='',mf='todas',is='',inf='todas',ff='todos',cs='',vf='',vs='',pq={},cq={},cbf={n:'',q:{},desc:10},lf={t:'in',desc:'',v:'',cat:'Venda',forma:'Pix'},seq=1,cur=null,stream=null,scanOn=false;
 function nd(){return{cl:null,busca:'',pay:'Pix',paid:false,ent:'entrega',q:{}}}function nc(n=''){return{n,tel:'',end:'',cid:'Tubarão',b:'Dehon',loc:'',int:'Médio'}}
 const cl=id=>clients.find(c=>c.id==id),pr=id=>prods.find(p=>p.id==id),cb=id=>cbs.find(c=>c.id==id),obj=x=>x.t=='c'?cb(x.id):pr(x.id);
 const cost=p=>p.c+p.emb+p.mo+p.c*p.fx/100,comps=x=>x.t=='p'?[[x.id,x.q]]:cb(x.id).it.map(i=>[i.p,i.q*x.q]);
@@ -128,8 +130,13 @@ function home(){
 }
 function paga(id){const o=orders.find(x=>x.id==id);o.paid=true;entrada('Venda: '+cl(o.cl).n,tot(o),o.pay);render()}
 function vitems(){return [...prods.map(p=>({key:'p'+p.id,t:'p',id:p.id,n:p.n,p:p.p,cat:p.cat,nov:p.nov,cod:p.cod,est:p.est,sub:p.w?p.w+' g':''})),...cbs.map(c=>({key:'c'+c.id,t:'c',id:c.id,n:c.n,p:c.p,cat:'Combos',est:cbEst(c),sub:c.it.map(i=>i.q+'× '+pr(i.p).n.split(' ')[0]).join(' + ')}))]}
-function vlist(){const t=vs.trim().toLowerCase(),a=vitems().filter(i=>i.n.toLowerCase().includes(t)&&(vf=='todas'||(vf=='Novidades'?i.nov:i.cat==vf)));
- return a.length?a.map(i=>`<div class="card row"><div class="row" style="justify-content:flex-start"><div class="th">${EM[i.cat]||'🥗'}</div><div><b>${i.n}</b><div class="mut">${i.cod?'nº '+i.cod+' · ':''}${i.sub?i.sub+' · ':''}${R(i.p)} · prontas: ${i.est}</div></div></div><div class="qty"><button class="sec" onclick="q('${i.key}',-1)">−</button><b>${draft.q[i.key]||0}</b><button onclick="q('${i.key}',1)">+</button></div></div>`).join(''):`<div class="card mut">Nada encontrado.</div>`}
+function vlist(){const t=vs.trim().toLowerCase(),a=vitems().filter(i=>(i.n+' '+(i.cod||'')).toLowerCase().includes(t)&&(t||(vf=='Novidades'?i.nov:i.cat==vf)));
+ return a.length?a.map(i=>`<div class="it"><div style="min-width:0"><b>${i.cod?'<span class="cd">'+i.cod+'</span>':''}${i.n}</b><div class="mut">${i.sub?i.sub+' · ':''}${R(i.p)} · prontas ${i.est}</div></div><div class="qty"><button class="sec" onclick="q('${i.key}',-1)">−</button><b>${draft.q[i.key]||0}</b><button onclick="q('${i.key}',1)">+</button></div></div>`).join(''):`<div class="card mut">Nada encontrado.</div>`}
+function setvf(k){vf=k;$('vl').innerHTML=vbody()}
+function vbody(){const t=vs.trim(),x=calc(draft),sum=x.u?`<div class="card" style="padding:8px 12px;margin-bottom:10px">🛒 <b>${x.u}</b> no pedido · <b>${R(subt(x.it))}</b></div>`:'';
+ if(!t&&!vf){const n=k=>vitems().filter(i=>k=='Novidades'?i.nov:i.cat==k).length;
+  return sum+`<div class="cats">${[['Novidades','⭐'],['Frango','🍗'],['Carne','🥩'],['Porco','🐖'],['Peixe','🐟'],['Combos','🎁'],['Outras','🥗']].filter(([k])=>n(k)>0).map(([k,e])=>`<button class="cat" onclick="setvf('${k}')"><span>${e}</span><b>${k}</b><small>${n(k)} opç${n(k)>1?'ões':'ão'}</small></button>`).join('')}</div>`}
+ return sum+(!t?`<div class="row" style="margin-bottom:8px"><button class="sm sec" onclick="setvf('')">← Categorias</button><b style="font:600 17px Fredoka,Georgia,serif">${vf}</b></div>`:'')+vlist()}
 function calc(d){const c=d.cl?cl(d.cl):null,it=vitems().filter(i=>d.q[i.key]>0).map(i=>({t:i.t,id:i.id,q:d.q[i.key]})),u=cnt(it),pct=tier(u),dv=Math.round(sbase(it)*pct)/100,ret=d.ent=='retirada',f=(!c||ret)?0:(u>=30?0:fr[c.cid]);return{c,it,u,pct,dv,ret,f,t:subt(it)-dv+(it.length?f:0),min:!ret&&u>0&&u<6}}
 function novo(){
  const d=draft,x=calc(d),{c,it,u,pct,dv,ret,f,t}=x,nx=[6,10,20,30].find(n=>n>u);
@@ -137,8 +144,8 @@ function novo(){
  `<div class="card"><label>Digite o nome do cliente</label><input value="${d.busca}" oninput="draft.busca=this.value;sug()" placeholder="Ex.: Marina" autocomplete="off"><div id="sg"></div></div>`)+
  `<div class="seg"><button class="${!ret?'on':''}" onclick="draft.ent='entrega';render()">🚚 Entrega</button><button class="${ret?'on':''}" onclick="draft.ent='retirada';render()">🏠 Retirada</button></div>
  <div class="mut" style="margin:-4px 0 8px">${ret?'Retirada em Armazém: segunda a sexta, 8h às 19h · Rua Antônio David Filet, 64, Centro':c?'Entrega em '+c.cid+': '+dias[c.cid]:'Escolha o cliente para ver o dia da entrega'}</div>
- <h2>O que ela vai levar?</h2><input type="search" value="${vs}" oninput="vs=this.value;$('vl').innerHTML=vlist()" placeholder="🔍 Pesquisar por nome ou número" style="margin-top:0">
- <div class="tiles">${[['todas','🍽️','Tudo'],['Novidades','⭐','Novidades'],['Frango','🍗','Frango'],['Carne','🥩','Carne'],['Porco','🐖','Porco'],['Peixe','🐟','Peixe'],['Combos','🎁','Combos']].map(([k,e,l])=>`<button class="${vf==k?'on':''}" onclick="vf='${k}';render()"><span>${e}</span>${l}</button>`).join('')}</div><div id="vl">${vlist()}</div>
+ <h2>O que ela vai levar?</h2><input type="search" value="${vs}" oninput="vs=this.value;$('vl').innerHTML=vbody()" placeholder="🔍 Pesquisar por nome ou número" style="margin-top:0">
+ <div id="vl">${vbody()}</div>
  <h2>Pagamento</h2><div class="pay">${['Pix','Crédito','Débito','Dinheiro','Vale Sicoob'].map(m=>`<button class="${d.pay==m?'on':''}" onclick="draft.pay='${m}';render()">${m}</button>`).join('')}</div>
  <div class="card row"><span>Cliente já pagou?</span><button class="sm ${d.paid?'':'sec'}" onclick="draft.paid=!draft.paid;render()">${d.paid?'Sim':'Não'}</button></div>
  <div class="card"><div class="row"><span>Itens (${u})</span><b>${R(subt(it))}</b></div>${dv?`<div class="row"><span>Desconto ${pct}%</span><b class="in">- ${R(dv)}</b></div>`:''}<div class="row"><span>Frete ${ret?'(retirada)':c?'('+c.cid+')':''}</span><b>${u>=30&&!ret?'grátis':R(it.length?f:0)}</b></div><div class="row"><span>Total</span><b class="big">${R(t)}</b></div>${nx?`<div style="margin-top:8px"><span class="chip a">Faltam ${nx-u} para ${tier(nx)}% OFF${nx==30?' + frete grátis':''}</span></div>`:''}</div>
@@ -162,17 +169,17 @@ function av(id){orders.find(x=>x.id==id).st='entrega';render()}
 function conf(id){cur=orders.find(o=>o.id==id);const c=cl(cur.cl);
  modal.innerHTML=`<div class="modal"><div class="sheet2"><div class="row"><b style="font:600 19px Fredoka,Georgia,serif">Conferir entrega</b><button class="x" onclick="closeConf()">×</button></div><div class="mut">${c.n} · ${c.b}</div><div id="cpr"></div>
  <video id="vid" playsinline muted hidden></video><button class="sec" onclick="cam()">📷 Bipar com a câmera</button><div id="cmsg" class="mut" style="margin:6px 0 10px"></div>
- <label>Ou digite o código (ou use um leitor de código de barras)</label><div class="row" style="gap:8px"><input id="man" placeholder="LC002-2-1" onkeydown="if(event.key=='Enter')man()" style="margin:0"><button class="sm" onclick="man()">OK</button></div>
- <h2>Marmitas do pedido <span class="mut">(toque para conferir)</span></h2><div id="cul"></div><button id="cfin" onclick="fim()">Confirmar entrega</button></div></div>`;cl2()}
-function cl2(){persist();const u=cur.u,ok=u.filter(x=>x.ok).length;$('cpr').innerHTML=`<div class="bar"><i class="i-g" style="width:${ok/u.length*100}%"></i></div><div class="mut">${ok} de ${u.length} conferidas</div>`;
- $('cul').innerHTML=u.map((x,i)=>`<button class="unit ${x.ok?'ok':''}" onclick="cur.u[${i}].ok=!cur.u[${i}].ok;cl2()"><i>${x.ok?'✓':''}</i><span><b>${pr(x.p).n}</b><br><span class="mut">${x.code}</span></span></button>`).join('');$('cfin').disabled=ok<u.length}
-function chk(code){const m=$('cmsg');if(!m||!cur)return;const u=cur.u.find(x=>x.code.toLowerCase()==String(code).trim().toLowerCase());
- if(!u)m.textContent='Código '+code+' não é deste pedido.';else if(u.ok)m.textContent='Essa marmita já foi conferida.';else{u.ok=true;m.textContent='✓ '+pr(u.p).n;navigator.vibrate&&navigator.vibrate(60);cl2()}}
+ <label>Ou digite o código do cupom (ex.: LC001)</label><div class="row" style="gap:8px"><input id="man" placeholder="LC001" onkeydown="if(event.key=='Enter')man()" style="margin:0"><button class="sm" onclick="man()">OK</button></div>
+ <button class="sec" style="margin:10px 0 0" onclick="cur.u.forEach(u=>u.ok=true);cl2()">Marcar todas como conferidas</button><h2>Marmitas do pedido <span class="mut">(toque para conferir)</span></h2><div id="cul"></div><button id="cfin" onclick="fim()">Confirmar entrega</button></div></div>`;cl2()}
+function cl2(){persist();const u=cur.u,ok=u.filter(x=>x.ok).length;$('cpr').innerHTML=`<div class="bar"><i class="i-g" style="width:${ok/u.length*100}%"></i></div><div class="mut">${ok} de ${u.length} conferidas</div>${cur.sc?'<div class="chip g" style="margin-top:6px">✓ Cupom bipado</div>':'<div class="mut" style="margin-top:4px">Bipe o código do cupom para confirmar o pedido (opcional).</div>'}`;
+ $('cul').innerHTML=u.map((x,i)=>`<button class="unit ${x.ok?'ok':''}" onclick="cur.u[${i}].ok=!cur.u[${i}].ok;cl2()"><i>${x.ok?'✓':''}</i><span><b>${pr(x.p).n}</b></span></button>`).join('');$('cfin').disabled=ok<u.length}
+function chk(code){const m=$('cmsg');if(!m||!cur)return;const v=String(code).trim().toUpperCase();
+ if(v==ocode(cur)){cur.sc=true;m.textContent='✓ Cupom do pedido '+v+' confirmado';navigator.vibrate&&navigator.vibrate(60);cl2()}else m.textContent='Código '+v+' não é deste pedido.'}
 function man(){const i=$('man');chk(i.value);i.value=''}
 async function cam(){const m=$('cmsg');
  if(!('BarcodeDetector' in window)){m.textContent='Este navegador não lê código pela câmera. Use o campo abaixo, toque nas marmitas ou use um leitor de código de barras.';return}
  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});const v=$('vid');v.srcObject=stream;v.hidden=false;await v.play();const det=new BarcodeDetector({formats:['code_128']});scanOn=true;
-  const loop=async()=>{if(!scanOn)return;try{(await det.detect(v)).forEach(b=>chk(b.rawValue))}catch(e){}setTimeout(loop,400)};loop();m.textContent='Aponte para o código da etiqueta.'}
+  const loop=async()=>{if(!scanOn)return;try{(await det.detect(v)).forEach(b=>chk(b.rawValue))}catch(e){}setTimeout(loop,400)};loop();m.textContent='Aponte para o código de barras do cupom.'}
  catch(e){m.textContent='Não consegui abrir a câmera aqui. Use a conferência manual.'}}
 function stopCam(){scanOn=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}
 function closeConf(){stopCam();modal.innerHTML='';cur=null;render()}
@@ -251,42 +258,49 @@ function addL(){const v=P(lf.v);if(!lf.desc.trim()||!(v>0))return alert('Preench
 function delL(id){lanc.splice(lanc.findIndex(l=>l.id==id),1);render()}
 const lin=o=>o.it.map(x=>[x.q+'x '+obj(x).n,R(obj(x).p*x.q)]),ocode=o=>'LC'+pad(o.id);
 function cupom(o){const c=cl(o.cl);
- modal.innerHTML=`<div class="modal" onclick="if(event.target==this)modal.innerHTML=''"><div class="sheet"><div class="paper"><div class="in2"><div class="in3"><div style="font-size:26px;line-height:1">👨‍🍳</div><h3>LISE COZINHA</h3><div>- marmitas fitness -</div><div style="margin-top:4px">Pedido ${pad(o.id)} · ${hoje()}</div></div>
+ modal.innerHTML=`<div class="modal" onclick="if(event.target==this)modal.innerHTML=''"><div class="sheet"><div class="paper"><div class="in2"><div class="in3"><img src="${LOGO_BW}" alt="Lise Cozinha" style="width:150px;display:block;margin:0 auto 4px"><div style="font-size:10.5px">COMIDA SAUDÁVEL ENTREGUE NA SUA PORTA</div><div style="margin-top:4px">Pedido ${pad(o.id)} · ${hoje()}</div></div>
  <div class="sec">${o.ent=='retirada'?'RETIRADA':'ENTREGA'}</div><div class="in3 t"><b>${c.n}</b><br>${c.tel}<br>${o.ent=='retirada'?'Retirada em Armazém<br>R. Antônio David Filet, 64':c.end+'<br>'+c.b+' - '+c.cid}</div>
  <div class="sec">ITENS</div><div class="in3 t">${lin(o).map(l=>`<div class="l"><span>${l[0]}</span><span>${l[1]}</span></div>`).join('')}<hr>${o.dv?`<div class="l"><span>Desconto ${o.pct}%</span><span>- ${R(o.dv)}</span></div>`:''}<div class="l"><span>Frete</span><span>${R(o.frete)}</span></div></div>
  <div class="bk l" style="margin-top:6px"><span>TOTAL</span><span>${R(tot(o))}</span></div><div style="text-align:center;margin:6px 0">${o.pay} · ${o.paid?'PAGO':'A RECEBER'}</div>
  <div style="text-align:center"><svg id="bc"></svg></div><div style="text-align:center;margin-top:4px">Obrigada pela preferência!</div><div style="text-align:center">- - - - - ✂ - - - - -</div></div></div>
- <div style="display:grid;gap:10px"><button id="pb" onclick="pdf(${o.id})">Baixar cupom (PDF 80 mm)</button><button class="sec" id="pe" onclick="etiq(${o.id})">Baixar etiquetas com código</button><button class="sec" onclick="modal.innerHTML=''">Fechar</button><div id="msg" style="color:#fff;text-align:center;font-size:14px"></div></div></div></div>`;
+ <div style="display:grid;gap:10px"><button id="pb" onclick="pdf(${o.id})">🖨️ Abrir PDF para imprimir</button><button class="sec" onclick="pdf(${o.id},1)">Enviar pelo WhatsApp / compartilhar</button><button class="sec" onclick="modal.innerHTML=''">Fechar</button><div id="msg" style="color:#fff;text-align:center;font-size:14px"></div></div></div></div>`;
  try{JsBarcode('#bc',ocode(o),{format:'CODE128',height:38,width:1.6,fontSize:12,margin:0})}catch(e){}
 
 }
 const bc=code=>{const c=document.createElement('canvas');JsBarcode(c,code,{format:'CODE128',height:60,width:3,displayValue:false,margin:0});return c.toDataURL('image/png')};
-async function save(doc,name){const m=$('msg');try{const blob=doc.output('blob'),f=new File([blob],name,{type:'application/pdf'});
- if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});m.textContent='Enviado.';return}
- const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.click();m.textContent='PDF baixado.'}catch(e){m.textContent=e.name=='AbortError'?'Cancelado.':'Não foi possível gerar o PDF.'}}
-async function pdf(id){
- const o=orders.find(x=>x.id==id),c=cl(o.cl),L=lin(o),{jsPDF}=window.jspdf,H=128+L.length*5,doc=new jsPDF({unit:'mm',format:[80,H]});let y=0;
- doc.setLineWidth(.7).rect(2,2,76,H-4);doc.setLineWidth(.25).rect(3.2,3.2,73.6,H-6.4);
- doc.setLineWidth(.5);[[36,11],[40,9],[44,11]].forEach(a=>doc.circle(a[0],a[1],3.6));doc.rect(36.5,14,7,2.2);
- doc.setFont('helvetica','bold').setFontSize(16).text('LISE COZINHA',40,25,{align:'center'});doc.setFontSize(7.5).setFont('helvetica','normal').text('- marmitas fitness -',40,29.5,{align:'center'});
- doc.text('Pedido '+pad(o.id)+'  ·  '+hoje(),40,34,{align:'center'});y=38;
- const sec=t=>{doc.setFillColor(0).rect(6,y,doc.getTextWidth(t)+6,4.2,'F');doc.setTextColor(255).setFont('helvetica','bold').setFontSize(7.5).text(t,9,y+3);doc.setTextColor(0);y+=7;doc.setFont('helvetica','normal').setFontSize(8.5)};
- sec(o.ent=='retirada'?'RETIRADA':'ENTREGA');doc.setFont('helvetica','bold').text(c.n,7,y);y+=4.2;doc.setFont('helvetica','normal');doc.text(c.tel,7,y);y+=4.2;if(o.ent=='retirada'){doc.text('Retirada em Armazém',7,y);y+=4.2;doc.text('R. Antônio David Filet, 64 - Centro',7,y);y+=6}else{doc.text(c.end,7,y);y+=4.2;doc.text(c.b+' - '+c.cid,7,y);y+=6}
- sec('ITENS');L.forEach(l=>{doc.text(l[0],7,y);doc.text(l[1],73,y,{align:'right'});y+=5});doc.setLineDashPattern([1,1],0).line(7,y-2,73,y-2);doc.setLineDashPattern([],0);y+=1.5;if(o.dv){doc.text('Desconto '+o.pct+'%',7,y);doc.text('- '+R(o.dv),73,y,{align:'right'});y+=5}doc.text('Frete',7,y);doc.text(R(o.frete),73,y,{align:'right'});y+=5;
- doc.setFillColor(0).rect(6,y,68,8,'F');doc.setTextColor(255).setFont('helvetica','bold').setFontSize(12).text('TOTAL',9,y+5.6);doc.text(R(tot(o)),71,y+5.6,{align:'right'});doc.setTextColor(0);y+=13;
- doc.setFontSize(8.5).text(o.pay+'  ·  '+(o.paid?'PAGO':'A RECEBER'),40,y,{align:'center'});y+=4;doc.addImage(bc(ocode(o)),'PNG',15,y,50,11);y+=14;
- doc.setFont('courier','normal').setFontSize(8).text(ocode(o),40,y,{align:'center'});y+=5;doc.setFont('helvetica','normal').text('Obrigada pela preferência!',40,y,{align:'center'});
- await save(doc,'cupom-lise-'+pad(o.id)+'.pdf');
+async function save(doc,name,share){const m=$('msg');try{const blob=doc.output('blob');
+ if(share){const f=new File([blob],name,{type:'application/pdf'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});m.textContent='Enviado.';return}}
+ const u=URL.createObjectURL(blob),w=window.open(u,'_blank');if(!w)location.href=u;m.textContent='PDF aberto.'}catch(e){m.textContent=e.name=='AbortError'?'Cancelado.':'Não foi possível gerar o PDF.'}}
+function pdf(id,share){
+ const o=orders.find(x=>x.id==id),c=cl(o.cl),{jsPDF}=window.jspdf,ret=o.ent=='retirada',un=cnt(o.it);
+ const tmp=new jsPDF({unit:'mm',format:[80,100]});tmp.setFont('helvetica','normal').setFontSize(8.5);
+ const L=o.it.map(x=>({q:x.q,n:tmp.splitTextToSize(obj(x).n,46),p:R(obj(x).p*x.q)}));
+ const addr=ret?['Retirada em Armazém','R. Antônio David Filet, 64 - Centro']:tmp.splitTextToSize(c.end,64).concat(tmp.splitTextToSize(c.b+' - '+c.cid,64));
+ const draw=(doc,H)=>{let y=0;
+  doc.setDrawColor(0).setTextColor(0).setLineWidth(.7).rect(2,2,76,H-4);doc.setLineWidth(.25).rect(3.2,3.2,73.6,H-6.4);
+  const lw=48,lh=lw*LOGO_R;doc.addImage(LOGO_BW,'PNG',16,8,lw,lh);y=8+lh+4;
+  doc.setFont('helvetica','bold').setFontSize(6.3).text('COMIDA SAUDÁVEL ENTREGUE NA SUA PORTA',40,y,{align:'center'});y+=3.2;
+  const wave=yy=>{doc.setLineWidth(.35);let up=true;for(let x=13;x<66;x+=1.7){doc.line(x,yy+(up?-.6:.6),x+1.7,yy+(up?.6:-.6));up=!up}};wave(y);y+=5;
+  doc.setFillColor(0).roundedRect(7,y,66,6.6,1.3,1.3,'F');doc.setTextColor(255).setFontSize(9).text('PEDIDO '+pad(o.id),10,y+4.6);doc.setFont('helvetica','normal').text(hoje(),70,y+4.6,{align:'right'});doc.setTextColor(0);y+=11.5;
+  const sec=t=>{doc.setFont('helvetica','bold').setFontSize(7.5);doc.setFillColor(0).rect(7,y,doc.getTextWidth(t)+6,4.3,'F');doc.setTextColor(255).text(t,10,y+3.1);doc.setTextColor(0);y+=7.4;doc.setFont('helvetica','normal').setFontSize(8.5)};
+  sec(ret?'RETIRADA':'ENTREGA');doc.setFont('helvetica','bold').text(c.n,7,y);y+=4.3;doc.setFont('helvetica','normal');doc.text(c.tel,7,y);y+=4.3;addr.forEach(a=>{doc.text(a,7,y);y+=4.2});y+=3;
+  sec('ITENS ('+un+')');
+  L.forEach(l=>{doc.setFont('helvetica','bold').text(l.q+'x',7,y);doc.setFont('helvetica','normal').text(l.n,13,y,{lineHeightFactor:1.15});doc.text(l.p,73,y,{align:'right'});y+=l.n.length*3.7+1.6});
+  doc.setLineDashPattern([1,1],0).setLineWidth(.25).line(7,y-1,73,y-1);doc.setLineDashPattern([],0);y+=3.6;
+  const row=(a,b)=>{doc.text(a,7,y);doc.text(b,73,y,{align:'right'});y+=4.6};
+  row('Subtotal',R(subt(o.it)));if(o.dv)row('Desconto '+o.pct+'%','- '+R(o.dv));row(ret?'Retirada':'Frete',o.frete?R(o.frete):(ret?'sem taxa':'grátis'));y+=1.5;
+  doc.setFillColor(0).roundedRect(7,y,66,9,1.5,1.5,'F');doc.setTextColor(255).setFont('helvetica','bold').setFontSize(13).text('TOTAL',10,y+6.3);doc.text(R(tot(o)),70,y+6.3,{align:'right'});doc.setTextColor(0);y+=13.5;
+  doc.setLineWidth(.4).roundedRect(7,y,66,7,1.5,1.5);doc.setFontSize(8.5).text(o.pay+'  ·  '+(o.paid?'PAGO':'A RECEBER'),40,y+4.7,{align:'center'});y+=11.5;
+  doc.addImage(bc(ocode(o)),'PNG',15,y,50,11);y+=14;doc.setFont('courier','normal').setFontSize(8).text(ocode(o),40,y,{align:'center'});y+=5;
+  wave(y);y+=5;doc.setFont('helvetica','bold').setFontSize(8.5).text('Obrigada pela preferência!',40,y,{align:'center'});y+=6;return y};
+ const end=draw(new jsPDF({unit:'mm',format:[80,500]}),500),doc=new jsPDF({unit:'mm',format:[80,end+4]});draw(doc,end+4);
+ save(doc,'cupom-lise-'+pad(o.id)+'.pdf',share);
 }
-async function etiq(id){
- const o=orders.find(x=>x.id==id),c=cl(o.cl),{jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:[80,42]});
- o.u.forEach((u,i)=>{if(i)doc.addPage([80,42]);doc.setLineWidth(.4).rect(2,2,76,38);doc.setFont('helvetica','bold').setFontSize(9).text('LISE COZINHA',6,8);doc.setFont('helvetica','normal').setFontSize(7.5).text(c.n.split(' ')[0]+' · Pedido '+pad(o.id),74,8,{align:'right'});
-  doc.setFont('helvetica','bold').setFontSize(10).text(pr(u.p).n,40,15,{align:'center',maxWidth:70});doc.addImage(bc(u.code),'PNG',14,19,52,12);doc.setFont('courier','normal').setFontSize(8).text(u.code,40,35,{align:'center'})});
- await save(doc,'etiquetas-pedido-'+pad(o.id)+'.pdf');
-}
+
 const SUPABASE_URL=(window.SUPABASE_URL||'').trim(),SUPABASE_KEY=(window.SUPABASE_KEY||'').trim();
 let sb=null;try{sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)}catch(e){}
 const me=Math.random().toString(36).slice(2);
+const LOGO_BW='data:image/png;base64,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',LOGO_R=0.4643;
 const SEED=JSON.parse(JSON.stringify(prods)),FR0={...fr};
 let last={},ready=false,tmr=null;
 const stat=t=>{const e=$('st');if(e)e.textContent=t};
