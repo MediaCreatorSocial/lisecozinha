@@ -73,8 +73,11 @@ button,.card,.tiles button,.unit{transition:transform .15s,box-shadow .2s,backgr
 </head>
 <body>
 <header><button id="burger" onclick="tm()" aria-label="Abrir menu"><i></i><i></i><i></i></button><div><b>LISE COZINHA</b><small id="sb"></small></div><span id="st" class="chip n" style="margin-left:auto"></span></header>
-<div id="nav"></div><main id="app"></main><div id="modal"></div>
+<div id="nav"></div><main id="app"></main>
+<script>function showErr(m){var a=document.getElementById('app');if(a)a.innerHTML='<div class="card alert" style="margin-top:20px"><b>Erro no sistema</b><div class="mut" style="word-break:break-all;margin-top:6px">'+m+'</div></div>'}
+window.addEventListener('error',function(e){showErr(e.message||'erro desconhecido')});window.addEventListener('unhandledrejection',function(e){showErr(String(e.reason&&e.reason.message||e.reason))});</script><div id="modal"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
 <script>
@@ -274,11 +277,9 @@ async function etiq(id){
   doc.setFont('helvetica','bold').setFontSize(10).text(pr(u.p).n,40,15,{align:'center',maxWidth:70});doc.addImage(bc(u.code),'PNG',14,19,52,12);doc.setFont('courier','normal').setFontSize(8).text(u.code,40,35,{align:'center'})});
  await save(doc,'etiquetas-pedido-'+pad(o.id)+'.pdf');
 }
-/* ====== SUPABASE: cole aqui os dois dados do seu projeto ====== */
-const SUPABASE_URL='NEXT_PUBLIC_SUPABASE_URL=https://uttcdkptgnvglrmohtgb.supabase.co';
-const SUPABASE_KEY='NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_l68iSGntWgBRte3w4VKp6w_PrmeiUg_';
-/* ============================================================== */
-const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY),me=Math.random().toString(36).slice(2);
+const SUPABASE_URL=(window.SUPABASE_URL||'').trim(),SUPABASE_KEY=(window.SUPABASE_KEY||'').trim();
+let sb=null;try{sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)}catch(e){}
+const me=Math.random().toString(36).slice(2);
 let last={},ready=false,tmr=null;
 const stat=t=>{const e=$('st');if(e)e.textContent=t};
 const snap=()=>({clients,prods,cbs,ins,orders,lanc,fr,meta:{seq}});
@@ -293,7 +294,8 @@ function sair(){sb.auth.signOut().then(()=>location.reload())}
 function loginUI(msg=''){nav.innerHTML='';sub_.textContent='Entrar';app.innerHTML=`<div class="card" style="margin-top:30px"><h2 style="margin-top:0">Bem-vinda 👋</h2><label>E-mail</label><input id="em" type="email" autocomplete="username"><label>Senha</label><input id="pw" type="password" autocomplete="current-password" onkeydown="if(event.key=='Enter')entrar()"><div class="mut" id="lm" style="color:var(--r);margin-bottom:8px">${msg}</div><button onclick="entrar()">Entrar</button></div>`}
 async function entrar(){const {error}=await sb.auth.signInWithPassword({email:$('em').value.trim(),password:$('pw').value});if(error)return loginUI('E-mail ou senha incorretos.');boot()}
 async function boot(){
- if(SUPABASE_URL.startsWith('COLE')){app.innerHTML='<div class="card alert"><b>Falta configurar</b><div class="mut">Abra o arquivo index.html e cole a URL e a chave do Supabase no começo do código (leia o LEIA-ME).</div></div>';return}
+ if(!window.supabase){showErr('A biblioteca do banco de dados não carregou. Verifique a internet ou se algum bloqueador de anúncios está ativo.');return}
+ if(!SUPABASE_URL||!SUPABASE_KEY||!sb||!/^https:\/\/.+\.supabase\.co\/?$/.test(SUPABASE_URL)){app.innerHTML='<div class="card alert" style="margin-top:20px"><b>Falta configurar</b><div class="mut">Abra o arquivo config.js e cole a URL (começa com https:// e termina em .supabase.co) e a chave (começa com sb_publishable_), cada uma entre aspas.</div></div>';return}
  const {data:{session}}=await sb.auth.getSession();if(!session)return loginUI();
  try{await load();ready=true;live();go('home');persist()}catch(e){app.innerHTML='<div class="card alert"><b>Não consegui conectar ao banco</b><div class="mut">Confira a internet, a URL e a chave do Supabase, e se o arquivo schema.sql foi executado.</div></div>'}}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});

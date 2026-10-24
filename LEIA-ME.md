@@ -8,9 +8,10 @@
 5. Em **Project Settings > API** copie a **Project URL** e a chave pública (anon / publishable). NUNCA use a chave secreta (service_role).
 
 ## 2) Configurar o arquivo
-Abra `index.html` em um editor de texto (Bloco de Notas serve) e troque, no começo do script, as duas linhas:
-- `SUPABASE_URL` pela Project URL
-- `SUPABASE_KEY` pela chave pública
+Abra `config.js` em um editor de texto (Bloco de Notas serve) e cole, ENTRE AS ASPAS:
+- `SUPABASE_URL`: a Project URL (https://....supabase.co, sem nada depois)
+- `SUPABASE_KEY`: a chave pública (sb_publishable_...)
+Só o `config.js` precisa ser editado. Se algo der errado, o site mostra o erro na tela.
 
 ## 3) Cloudflare Pages (publicar)
 1. Em dash.cloudflare.com: **Workers & Pages > Create > Pages > Upload assets**.
