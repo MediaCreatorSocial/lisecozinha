@@ -28,3 +28,9 @@ Só o `config.js` precisa ser editado. Se algo der errado, o site mostra o erro 
 - Se alguém editar a mesma coisa nos dois celulares ao mesmo tempo, vale a última gravação.
 - Projetos gratuitos do Supabase podem ser pausados após um período sem uso; se acontecer, é só reativar no painel.
 - Para atualizar o sistema no futuro, envie os arquivos novos pelo mesmo projeto do Cloudflare.
+
+## Questionário de preferências (novo)
+1. No Supabase, abra o SQL Editor e rode o `schema.sql` de novo (ele cria a tabela `respostas` sem apagar nada do que já existe).
+2. Suba o `questionario.html` para o GitHub junto com os outros arquivos. O link para os clientes é `seusite.pages.dev/questionario.html` (também aparece no menu Preferências do aplicativo).
+3. As respostas aparecem em **Preferências** no menu, com aviso de novas, PDF, CSV para planilha e botão para salvar no cadastro do cliente.
+4. Opcional: coloque o WhatsApp da Lise na linha `const WHATS=''` do `questionario.html` (55 + DDD + número).
