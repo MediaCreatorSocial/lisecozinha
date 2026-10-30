@@ -34,3 +34,7 @@ Só o `config.js` precisa ser editado. Se algo der errado, o site mostra o erro 
 2. Suba o `questionario.html` para o GitHub junto com os outros arquivos. O link para os clientes é `seusite.pages.dev/questionario.html` (também aparece no menu Preferências do aplicativo).
 3. As respostas aparecem em **Preferências** no menu, com aviso de novas, PDF, CSV para planilha e botão para salvar no cadastro do cliente.
 4. Opcional: coloque o WhatsApp da Lise na linha `const WHATS=''` do `questionario.html` (55 + DDD + número).
+
+## Propostas personalizadas (novo)
+No menu ☰ > **Propostas**. Para montar a partir de uma resposta do questionário: Preferências > Abrir > **Montar proposta personalizada**.
+Lá você vê as marmitas do cardápio que combinam com o que o cliente pediu, monta marmitas personalizadas (proteína, acompanhamento, legume, peso e preço), vê o total com desconto por quantidade e frete, e gera o **PDF** para enviar ao cliente ou copia o texto formatado para o WhatsApp. As propostas ficam salvas no sistema.

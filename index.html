@@ -101,8 +101,8 @@ const orders=[];
 const lanc=[];
 const cats={in:['Venda','Frete recebido','Outras entradas'],out:['Insumos','Embalagem','Gás e luz','Combustível/entrega','Outras saídas']};
 const EM={Frango:'🍗',Carne:'🥩',Peixe:'🐟',Porco:'🐖',Combos:'🎁',Novidades:'⭐',Outras:'🥗'};
-const titles={home:'Início',new:'Novo pedido',kit:'Cozinha',cli:'Clientes',pref:'Preferências',reg:'Novo cliente',fin:'Financeiro',fre:'Cidades e fretes'};
-const mn=[['home','🏠','Início'],['new','🛒','Novo pedido'],['kit','🍲','Cozinha'],['cli','👥','Clientes'],['pref','📝','Preferências'],['fin','💰','Financeiro'],['fre','🚚','Cidades e fretes']];
+const titles={home:'Início',new:'Novo pedido',kit:'Cozinha',cli:'Clientes',pref:'Preferências',prop:'Propostas',pbuild:'Montar proposta',reg:'Novo cliente',fin:'Financeiro',fre:'Cidades e fretes'};
+const mn=[['home','🏠','Início'],['new','🛒','Novo pedido'],['kit','🍲','Cozinha'],['cli','👥','Clientes'],['pref','📝','Preferências'],['prop','📋','Propostas'],['fin','💰','Financeiro'],['fre','🚚','Cidades e fretes']];
 let tab='home',back='cli',open=false,ks='ped',draft=nd(),cf=nc(),compra={i:0,q:'',u:'kg',v:''},ms='',mf='todas',is='',inf='todas',ff='todos',cs='',vf='',vs='',pq={},cq={},cbf={n:'',q:{},desc:10},lf={t:'in',desc:'',v:'',cat:'Venda',forma:'Pix'},seq=1,cur=null,stream=null,scanOn=false;
 function nd(){return{cl:null,busca:'',pay:'Pix',paid:false,ent:'entrega',q:{}}}function nc(n=''){return{n,tel:'',end:'',cid:'Tubarão',b:'Dehon',loc:'',int:'Médio',pref:''}}
 const cl=id=>clients.find(c=>c.id==id),pr=id=>prods.find(p=>p.id==id),cb=id=>cbs.find(c=>c.id==id),obj=x=>x.t=='c'?cb(x.id):pr(x.id);
@@ -120,7 +120,7 @@ function go(t){tab=t;open=false;scrollTo(0,0);render();app.classList.remove('pg'
 function render(){
  $('sb').textContent=titles[tab];
  $('nav').innerHTML=open?`<div id="ov" onclick="tm()"></div><div id="dr"><h3>Lise Cozinha</h3><p>Marmitas fitness</p>${mn.map(([k,i,l])=>`<button class="${tab==k?'on':''}" onclick="go('${k}')">${i} ${l}${k=='pref'&&unseen()?' <span class="chip a" style="margin-left:6px">'+unseen()+'</span>':''}</button>`).join('')}<button onclick="sair()">🚪 Sair</button></div>`:'';
- app.innerHTML={home,new:novo,kit:cozinha,cli:clientes,pref:prefs,reg:cadastro,fin:financeiro,fre:fretes}[tab]();if(tab=='new')sug();
+ app.innerHTML={home,new:novo,kit:cozinha,cli:clientes,pref:prefs,prop:propostas,pbuild:pbuild,reg:cadastro,fin:financeiro,fre:fretes}[tab]();if(tab=='new')sug();
 }
 function entrada(desc,v,forma){lanc.unshift({id:seq++,t:'in',d:hoje(),desc,cat:'Venda',forma,v})}
 function home(){
@@ -314,18 +314,21 @@ function secoes(s){const j=a=>a.join(', '),gp=o=>Object.keys(o).map(n=>n+(o[n].l
  {ic:'🌿',t:'Temperos a evitar',items:tp.length?tp:['Nenhum']}]
  .concat(s.plano?[{ic:'📋',t:'Plano alimentar',items:[s.plano]}]:[]).concat(s.obs?[{ic:'💬',t:'Observações',items:[s.obs]}]:[])}
 function prefTxt(s){return secoes(s).map(x=>x.t+': '+x.items.join('; ')+(x.note?' ('+x.note+')':'')).join('\n')}
-function prefPDF(nome,tel,s,data,logo,ratio){const {jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'a4'});let y=14;
- doc.addImage(logo,'PNG',75,y,60,60*ratio);y+=60*ratio+9;
- doc.setFont('helvetica','bold').setFontSize(18).setTextColor(240,104,56).text('PREFERÊNCIAS ALIMENTARES',105,y,{align:'center'});y+=7;
- doc.setFont('helvetica','normal').setFontSize(10).setTextColor(90).text('Cliente: '+nome+(tel?'  ·  '+tel:'')+'  ·  '+data,105,y,{align:'center'});y+=5;
- doc.setDrawColor(240,104,56).setLineWidth(.6).line(20,y,190,y);y+=9;
- secoes(s).forEach(x=>{if(y>255){doc.addPage();y=18}
-  doc.setFillColor(253,232,220).roundedRect(20,y-5,170,8,2,2,'F');doc.setFont('helvetica','bold').setFontSize(11.5).setTextColor(37,116,68).text(x.t.toUpperCase(),24,y);y+=8;
-  doc.setFont('helvetica','normal').setFontSize(10.5).setTextColor(40);
-  x.items.forEach(i=>{const ls=doc.splitTextToSize('•  '+i,160);if(y+ls.length*5>282){doc.addPage();y=18}doc.text(ls,26,y);y+=ls.length*5+.6});
-  if(x.note){const ls=doc.splitTextToSize(x.note,160);doc.setFont('helvetica','italic').setTextColor(120).text(ls,26,y);y+=ls.length*5}
-  y+=5});
- doc.setFont('helvetica','normal').setFontSize(8.5).setTextColor(140).text('Lise Cozinha  ·  comida saudável entregue na sua porta',105,290,{align:'center'});return doc}
+function prefPDF(nome,tel,s,data,logo,ratio){const {jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'a4'}),OR=[240,104,56],GR=[37,116,68];let y=0;
+ const head=()=>{doc.setFillColor(254,250,241).rect(0,0,210,46,'F');doc.addImage(logo,'PNG',75,7,60,60*ratio);doc.setFillColor(...OR).rect(0,46,210,2.2,'F')};
+ head();doc.setFont('helvetica','bold').setFontSize(17).setTextColor(...OR).text('PREFERÊNCIAS ALIMENTARES',105,60,{align:'center'});
+ doc.setFont('helvetica','normal').setFontSize(10).setTextColor(100).text('Cliente: '+nome+(tel?'  ·  '+tel:'')+'  ·  '+data,105,66.5,{align:'center'});y=78;
+ let x=22;const pl=(t,solid)=>{doc.setFontSize(9.5).setFont('helvetica',solid?'bold':'normal');const w=doc.getTextWidth(t)+7;if(x+w>188){x=22;y+=8.6}
+  if(solid){doc.setFillColor(...GR).roundedRect(x,y-4.6,w,6.6,3.3,3.3,'F');doc.setTextColor(255)}else{doc.setFillColor(253,240,232).setDrawColor(...OR).setLineWidth(.3).roundedRect(x,y-4.6,w,6.6,3.3,3.3,'FD');doc.setTextColor(150,60,20)}
+  doc.text(t,x+3.5,y);x+=w+2.4};
+ secoes(s).forEach(c=>{if(y>252){doc.addPage();y=20}
+  doc.setFillColor(...OR).roundedRect(20,y-4.4,2.6,6,1,1,'F');doc.setFont('helvetica','bold').setFontSize(11.5).setTextColor(...GR).text(c.t.toUpperCase(),25,y);y+=3.2;doc.setDrawColor(232,222,198).setLineWidth(.3).line(20,y,190,y);y+=7.6;x=22;
+  if(c.t=='Plano alimentar'||c.t=='Observações'){doc.setFont('helvetica','normal').setFontSize(10.5).setTextColor(50);const ls=doc.splitTextToSize(c.items[0],164);doc.text(ls,22,y-1);y+=ls.length*5}
+  else c.items.forEach(i=>{const m=i.match(/^(.*) \(([^()]*)\)$/);if(m){pl(m[1],1);m[2].split(', ').forEach(p=>pl(p,0))}else pl(i,0)});
+  if(c.note){y+=8;doc.setFont('helvetica','italic').setFontSize(10).setTextColor(130,50,30).text(c.note,22,y)}
+  y+=13});
+ const n=doc.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);doc.setFont('helvetica','normal').setFontSize(8.5).setTextColor(140).text('Lise Cozinha  ·  comida saudável entregue na sua porta',105,291,{align:'center'})}
+ return doc}
 
 let resp=[];const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'),unseen=()=>resp.filter(r=>!r.visto).length;
 async function loadResp(){const {data,error}=await sb.from('respostas').select('*').order('created_at',{ascending:false}).limit(300);if(!error&&data){resp=data;if(tab=='pref'&&!busy())render();else if(tab=='home')render()}}
@@ -337,7 +340,7 @@ function prefs(){const lk=location.origin+'/questionario.html';
 function prefDet(id){const r=resp.find(x=>x.id==id);if(!r)return;if(!r.visto){r.visto=true;sb.from('respostas').update({visto:true}).eq('id',id).then(()=>{})}
  modal.innerHTML=`<div class="modal"><div class="sheet2"><div class="row"><b style="font:600 19px Fredoka,Georgia,serif">${esc(r.nome)}</b><button class="x" onclick="modal.innerHTML='';render()">×</button></div><div class="mut">${esc(r.tel||'')} · ${new Date(r.created_at).toLocaleString('pt-BR')}</div>
  ${secoes(r.dados).map(x=>`<div class="card" style="margin-top:10px;box-shadow:none"><b>${x.ic} ${x.t}</b>${x.items.map(i=>`<div>• ${esc(i)}</div>`).join('')}${x.note?`<div class="mut"><i>${esc(x.note)}</i></div>`:''}</div>`).join('')}
- <div style="display:grid;gap:8px;margin-top:12px"><button onclick="vinc(${id})">👤 Salvar no cadastro do cliente</button><button class="sec" onclick="prefPdfR(${id})">📄 Salvar PDF</button><button class="sec" onclick="apagaR(${id})">🗑️ Apagar</button></div></div></div>`}
+ <div style="display:grid;gap:8px;margin-top:12px"><button onclick="propDe(${id})">📋 Montar proposta personalizada</button><button class="sec" onclick="vinc(${id})">👤 Salvar no cadastro do cliente</button><button class="sec" onclick="prefPdfR(${id})">📄 Salvar PDF</button><button class="sec" onclick="apagaR(${id})">🗑️ Apagar</button></div></div></div>`}
 function vinc(id){const r=resp.find(x=>x.id==id),d=x=>(x||'').replace(/\D/g,''),c=clients.find(c=>(d(c.tel)&&d(c.tel)==d(r.tel))||c.n.trim().toLowerCase()==r.nome.trim().toLowerCase()),t=prefTxt(r.dados);
  modal.innerHTML='';if(c){c.pref=t;go('cli');alert('Preferências salvas no cadastro de '+c.n+'.')}else{cf=Object.assign(nc(r.nome),{tel:r.tel||'',pref:t});back='cli';go('reg')}}
 function prefPdfR(id){const r=resp.find(x=>x.id==id);prefPDF(r.nome,r.tel,r.dados,new Date(r.created_at).toLocaleDateString('pt-BR'),LOGO_COL,LOGO_R).save('preferencias-'+r.nome.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.pdf')}
@@ -347,11 +350,86 @@ function csvR(){const c=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"',H=['D
  const rows=resp.map(r=>{const s=r.dados||{};return [new Date(r.created_at).toLocaleDateString('pt-BR'),r.nome,r.tel,(s.alg||[]).concat(s.algO?['Outra: '+s.algO]:[]).join(', '),g(s.pro),s.proN,g(s.car),s.carN,(s.leg||[]).join(', '),s.legN,(s.tmp||[]).concat(s.tmpO?[s.tmpO]:[]).join(', '),s.plano,s.obs].map(c).join(';')});
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+[H.map(c).join(';')].concat(rows).join('\r\n')],{type:'text/csv;charset=utf-8'}));a.download='preferencias-lise-cozinha.csv';a.click()}
 
+const PRO=[['Filé de frango',['Grelhado','Desfiado','Ao molho']],['Sobrecoxa',['Assada','Ao molho']],['Carne moída',['Ao molho','Refogada com temperos']],['Carne bovina',['Em tiras grelhada com cebola','Em tiras grelhada sem cebola','Ao molho','Desfiada ao molho']],['Carne suína',['Grelhada com cebola','Grelhada sem cebola']],['Peixe',['Filé grelhado']]];
+const CAR=[['Arroz',['Branco','Integral','Parboilizado']],['Batata inglesa',['Purê','Batata rústica']],['Batata doce',['Cozida','Assada']],['Aipim (mandioca)',['Só cozido','Purê de aipim']],['Macarrão',['Branco sem molho, só com azeite','Com molho']]];
+const LEGS=['Brócolis','Cenoura','Abobrinha','Couve-flor','Vagem','Abóbora','Couve','Folhas verdes'];
+const KWP={'Filé de frango':['frango'],'Sobrecoxa':['sobrecoxa'],'Carne moída':['carne moída'],'Carne bovina':['carne de panela','carne desfiada','carne em tiras','bovina'],'Carne suína':['suíno','suína','calabresa','bacon','feijoada'],'Peixe':['tilápia','peixe']};
+const KWC={'Arroz':['arroz'],'Batata inglesa':['batata inglesa'],'Batata doce':['batata doce'],'Aipim (mandioca)':['aipim'],'Macarrão':['macarrão']};
+const KWL={'Brócolis':['brócolis'],'Cenoura':['cenoura'],'Abobrinha':['abobrinha'],'Couve-flor':['couve-flor'],'Vagem':['vagem'],'Abóbora':['abóbora'],'Couve':['couve'],'Folhas verdes':['salada','folhas']};
+const BASE={'Filé de frango':23.9,'Sobrecoxa':23.9,'Carne moída':24.9,'Carne bovina':24.9,'Carne suína':22,'Peixe':32};
+const LBL={'Batata inglesa|Purê':'Purê de batata inglesa','Peixe|Filé grelhado':'Filé de peixe grelhado','Macarrão|Com molho':'Macarrão com molho','Macarrão|Branco sem molho, só com azeite':'Macarrão branco sem molho, só com azeite'};
+const props=[];let pf=null,pb={pro:0,car:0,leg:'',w:300,p:null,n:null};
+function lab(g,p){if(LBL[g+'|'+p])return LBL[g+'|'+p];const sh=g.replace(' (mandioca)','');return p.toLowerCase().includes(sh.split(' ')[0].toLowerCase())?p:sh+' '+p.toLowerCase()}
+function flat(base,sel){const o=[];base.forEach(([g,ps])=>{if(sel&&Object.keys(sel).length){if(!(g in sel))return;const c=sel[g].length?sel[g]:ps;c.forEach(p=>o.push({g,p,l:lab(g,p)}))}else ps.forEach(p=>o.push({g,p,l:lab(g,p)}))});return o.length?o:flat(base,null)}
+function sugest(pref){const s=pref||{},av=[s.proN,s.carN,s.legN].join(',').split(/[,;]| e /i).map(x=>x.trim().toLowerCase()).filter(x=>x.length>=3);
+ return prods.map(p=>{const n=p.n.toLowerCase(),why=[];let sc=0,gotP=false;
+  Object.keys(s.pro||{}).forEach(k=>{if((KWP[k]||[]).some(w=>n.includes(w))){if(!gotP){sc+=3;gotP=true}why.push(k)}});
+  Object.keys(s.car||{}).forEach(k=>{if((KWC[k]||[]).some(w=>n.includes(w))){sc+=2;why.push(k.replace(' (mandioca)',''))}});
+  (s.leg||[]).forEach(k=>{if((KWL[k]||[]).some(w=>n.includes(w))){sc+=1;why.push(k)}});
+  const bad=av.find(a=>n.includes(a));return{p,sc:bad?-1:sc,why}}).filter(r=>r.sc>=3).sort((a,b)=>b.sc-a.sc).slice(0,8)}
+function propTot(p){const u=p.it.reduce((s,x)=>s+x.q,0),sub=p.it.reduce((s,x)=>s+x.p*x.q,0),pct=tier(u),dv=Math.round(sub*pct)/100,fre=p.ent=='retirada'?0:(u>=30?0:(fr[p.cid]||0));return{u,sub,pct,dv,fre,tot:sub-dv+(u?fre:0),min:p.ent!='retirada'&&u>0&&u<6}}
+function propTxt(p){const T=propTot(p),L=['*🧡 PROPOSTA PERSONALIZADA · Lise Cozinha*','_Para: '+p.nome+'_','','*Marmitas*'];
+ p.it.forEach(x=>L.push('• '+x.q+'x *'+x.n+'* — '+R(x.p)+' cada _('+R(x.p*x.q)+')_'));L.push('');
+ L.push('*Subtotal:* '+R(T.sub));if(T.dv)L.push('*Desconto '+T.pct+'%:* - '+R(T.dv));L.push('*'+(p.ent=='retirada'?'Retirada em Armazém':'Frete ('+p.cid+')')+':* '+(T.fre?R(T.fre):(p.ent=='retirada'?'sem taxa':'grátis')));
+ L.push('*TOTAL: '+R(T.tot)+'*','','_Proposta válida por '+(p.val||7)+' dias. Pagamento: Pix, dinheiro, cartão ou vale alimentação Sicoob._');return L.join('\n')}
+function propPDF(p){const {jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'a4'}),T=propTot(p),OR=[240,104,56],GR=[37,116,68];let y=0;
+ const head=()=>{doc.setFillColor(254,250,241).rect(0,0,210,46,'F');doc.addImage(LOGO_COL,'PNG',18,7,52,52*LOGO_R);doc.setFillColor(...OR).rect(0,46,210,2.2,'F')};
+ head();doc.setFont('helvetica','bold').setFontSize(19).setTextColor(...OR).text('PROPOSTA PERSONALIZADA',192,21,{align:'right'});
+ doc.setFont('helvetica','normal').setFontSize(10.5).setTextColor(90).text('Para: '+p.nome,192,28.5,{align:'right'});doc.text(new Date(p.created||Date.now()).toLocaleDateString('pt-BR')+'  ·  válida por '+(p.val||7)+' dias',192,34,{align:'right'});
+ y=60;doc.setFillColor(...GR).roundedRect(18,y-5,174,8,2,2,'F');doc.setFont('helvetica','bold').setFontSize(9.5).setTextColor(255).text('MARMITA',22,y);doc.text('QTD',128,y,{align:'center'});doc.text('UNITÁRIO',158,y,{align:'right'});doc.text('SUBTOTAL',188,y,{align:'right'});y+=8;
+ p.it.forEach((x,i)=>{const a=doc.setFont('helvetica','bold').setFontSize(10.5).splitTextToSize(x.n,96),d=x.d?doc.setFont('helvetica','normal').setFontSize(8.5).splitTextToSize(x.d,96):[],h=a.length*4.8+d.length*3.9+4;
+  if(y+h>262){doc.addPage();y=20}
+  if(i%2==0)doc.setFillColor(254,247,236).rect(18,y-4.4,174,h,'F');
+  doc.setFont('helvetica','bold').setFontSize(10.5).setTextColor(40).text(a,22,y);let yy=y+a.length*4.8-.4;
+  if(d.length){doc.setFont('helvetica','normal').setFontSize(8.5).setTextColor(125).text(d,22,yy);}
+  doc.setFont('helvetica','normal').setFontSize(10.5).setTextColor(40).text(String(x.q),128,y,{align:'center'});doc.text(R(x.p),158,y,{align:'right'});doc.setFont('helvetica','bold').text(R(x.p*x.q),188,y,{align:'right'});y+=h});
+ y+=4;if(y>218){doc.addPage();y=22}
+ const row=(a,b)=>{doc.setFont('helvetica','normal').setFontSize(10.5).setTextColor(60).text(a,130,y);doc.text(b,188,y,{align:'right'});y+=6};
+ row('Subtotal ('+T.u+' marmitas)',R(T.sub));if(T.dv)row('Desconto ('+T.pct+'%)','- '+R(T.dv));row(p.ent=='retirada'?'Retirada em Armazém':'Frete ('+p.cid+')',T.fre?R(T.fre):(p.ent=='retirada'?'sem taxa':'grátis'));y+=1.5;
+ doc.setFillColor(...OR).roundedRect(118,y-5.4,74,11,2.5,2.5,'F');doc.setFont('helvetica','bold').setFontSize(13).setTextColor(255).text('TOTAL',123,y+1.8);doc.text(R(T.tot),187,y+1.8,{align:'right'});y+=17;
+ if(p.obs){doc.setFont('helvetica','italic').setFontSize(10).setTextColor(90);const ls=doc.splitTextToSize('Observação: '+p.obs,170);doc.text(ls,20,y);y+=ls.length*5+4}
+ if(y>205){doc.addPage();y=22}
+ const inf=['Entrega'+(p.ent=='retirada'?'':' em '+p.cid)+': '+(p.ent=='retirada'?'retirada em Armazém, de segunda a sexta, das 8h às 19h (Rua Antônio David Filet, 64, Centro).':(dias[p.cid]||'a combinar')+', conforme a rota da semana.'),'Pedido mínimo para entrega: 6 unidades.','Desconto por quantidade: 6 un 3% · 10 un 5% · 20 un 8% · 30 un 10% com frete grátis.','Pagamento: Pix, dinheiro, cartão ou vale alimentação Sicoob.','Todas as marmitas são sem glúten e sem lactose, preparadas com carinho.'];
+ doc.setFont('helvetica','normal').setFontSize(9.5);const LS=inf.map(t=>doc.splitTextToSize('•  '+t,160)),bh=14+LS.reduce((s,l)=>s+l.length*4.6+.8,0);
+ doc.setFillColor(253,240,232).roundedRect(18,y-5,174,bh,3,3,'F');doc.setFont('helvetica','bold').setFontSize(11).setTextColor(...GR).text('COMO FUNCIONA',23,y+1);doc.setFont('helvetica','normal').setFontSize(9.5).setTextColor(60);let iy=y+8;LS.forEach(ls=>{doc.text(ls,23,iy);iy+=ls.length*4.6+.8});
+ const n=doc.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);doc.setFont('helvetica','normal').setFontSize(8.5).setTextColor(140).text('Valores sujeitos à confirmação do pedido  ·  Lise Cozinha  ·  comida saudável entregue na sua porta',105,291,{align:'center'})}
+ return doc}
+function propostas(){return `<button onclick="pf={id:null,nome:'',tel:'',cid:'Tubarão',ent:'entrega',it:[],obs:'',pref:null,val:7,created:null};pb={pro:0,car:0,leg:'',w:300,p:null,n:null};go('pbuild')" style="margin-bottom:10px">+ Nova proposta</button>`+
+ (props.length?props.map(p=>{const T=propTot(p);return `<div class="card"><div class="row"><b>${esc(p.nome)}</b><b>${R(T.tot)}</b></div><div class="mut">${T.u} marmitas · ${new Date(p.created).toLocaleDateString('pt-BR')}${p.pref?' · com preferências':''}</div><div class="g2" style="margin-top:10px"><button class="sec" onclick="abrirProp(${p.id})">Abrir / editar</button><button onclick="propPdf(${p.id})">📄 PDF</button></div><button class="sm sec" style="margin-top:8px" onclick="delProp(${p.id})">🗑️ Apagar</button></div>`}).join(''):`<div class="card mut">Nenhuma proposta ainda. Abra uma resposta em Preferências e toque em “Montar proposta personalizada”.</div>`)}
+function propDe(id){const r=resp.find(x=>x.id==id);if(!r)return;const d=x=>(x||'').replace(/\D/g,''),c=clients.find(c=>(d(c.tel)&&d(c.tel)==d(r.tel))||c.n.trim().toLowerCase()==r.nome.trim().toLowerCase());
+ pf={id:null,nome:r.nome,tel:r.tel||'',cid:c?c.cid:'Tubarão',ent:'entrega',it:[],obs:'',pref:r.dados,val:7,created:null};pb={pro:0,car:0,leg:'',w:300,p:null,n:null};modal.innerHTML='';go('pbuild')}
+function abrirProp(id){pf=JSON.parse(JSON.stringify(props.find(p=>p.id==id)));pb={pro:0,car:0,leg:'',w:300,p:null,n:null};go('pbuild')}
+function salvaProp(){if(!pf.nome.trim())return alert('Digite o nome do cliente.');if(!pf.it.length)return alert('Adicione pelo menos uma marmita.');pf.id=pf.id||Date.now();pf.created=pf.created||new Date().toISOString();const i=props.findIndex(p=>p.id==pf.id);i<0?props.unshift(pf):props.splice(i,1,pf);go('prop')}
+function delProp(id){if(confirm('Apagar esta proposta?')){props.splice(props.findIndex(p=>p.id==id),1);render()}}
+const slug=s=>s.trim().toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+function propPdf(id){const p=id?props.find(x=>x.id==id):pf;if(!p.it.length)return alert('Adicione pelo menos uma marmita.');propPDF(p).save('proposta-'+slug(p.nome||'cliente')+'.pdf')}
+function copiaProp(){navigator.clipboard&&navigator.clipboard.writeText(propTxt(pf)).then(()=>alert('Texto copiado! Cole no WhatsApp.'))}
+function addSug(pid){const p=pr(pid);const x=pf.it.find(i=>i.pid==pid);x?x.q++:pf.it.push({pid,n:p.n,d:(p.w?p.w+' g · ':'')+'nº '+p.cod,p:p.p,q:1});render()}
+function addCust(){const pro=flat(PRO,pf.pref&&pf.pref.pro),car=flat(CAR,pf.pref&&pf.pref.car),a=pro[pb.pro]||pro[0],c=car[pb.car]||car[0],nm=pb.n!=null?pb.n:autoName(a,c),pc=pb.p!=null?pb.p:(BASE[a.g]||24);
+ pf.it.push({n:nm,d:a.l+', '+c.l.toLowerCase()+(pb.leg?', '+pb.leg.toLowerCase():'')+' · '+pb.w+' g',p:pc,q:1,cu:1});pb.n=null;pb.p=null;render()}
+const autoName=(a,c)=>a.l+' com '+c.l.toLowerCase()+(pb.leg?' e '+pb.leg.toLowerCase():'');
+function pbuild(){const p=pf,T=propTot(p),S=p.pref?sugest(p.pref):[],pro=flat(PRO,p.pref&&p.pref.pro),car=flat(CAR,p.pref&&p.pref.car),a=pro[pb.pro]||pro[0],c=car[pb.car]||car[0],nm=pb.n!=null?pb.n:autoName(a,c),pc=pb.p!=null?pb.p:(BASE[a.g]||24);
+ const ped=p.pref?secoes(p.pref).slice(0,4).map(x=>`<div><b>${x.ic} ${x.t}:</b> ${esc(x.items.join('; '))}${x.note?` <i class="mut">(${esc(x.note)})</i>`:''}</div>`).join(''):'';
+ return `<div class="card"><label>Cliente</label><input value="${esc(p.nome)}" oninput="pf.nome=this.value" placeholder="Nome"><label>Cidade (define o frete)</label><select onchange="pf.cid=this.value;render()">${Object.keys(geo).map(g=>`<option ${g==p.cid?'selected':''}>${g}</option>`).join('')}</select>
+ <div class="seg" style="margin:0"><button class="${p.ent!='retirada'?'on':''}" onclick="pf.ent='entrega';render()">🚚 Entrega</button><button class="${p.ent=='retirada'?'on':''}" onclick="pf.ent='retirada';render()">🏠 Retirada</button></div></div>`+
+ (ped?`<details class="card"><summary><b>🍽️ O que o cliente pediu</b></summary><div style="margin-top:8px;display:grid;gap:4px">${ped}</div></details>`:'')+
+ `<h2>${p.pref?'Combina com o que ele pediu':'Do cardápio'}</h2>`+
+ (p.pref?(S.length?S.map(s=>`<div class="it"><div style="min-width:0"><b><span class="cd">${s.p.cod}</span>${esc(s.p.n)}</b><div class="mut">${R(s.p.p)} · ${s.why.map(w=>'✓ '+esc(w)).join(' · ')}</div></div><button class="sm" onclick="addSug(${s.p.id})">+</button></div>`).join(''):`<div class="card mut">Nenhuma marmita do cardápio combina bem. Monte uma personalizada abaixo.</div>`)
+ :`<div class="card"><select id="cs">${prods.map(x=>`<option value="${x.id}">${x.cod} · ${esc(x.n)} · ${R(x.p)}</option>`).join('')}</select><button class="sm" onclick="addSug(+$('cs').value)">+ Adicionar do cardápio</button></div>`)+
+ `<h2>Montar marmita personalizada</h2><div class="card"><label>Proteína</label><select onchange="pb.pro=+this.value;pb.n=null;pb.p=null;render()">${pro.map((o,i)=>`<option value="${i}" ${i==pb.pro?'selected':''}>${esc(o.l)}</option>`).join('')}</select>
+ <label>Acompanhamento</label><select onchange="pb.car=+this.value;pb.n=null;render()">${car.map((o,i)=>`<option value="${i}" ${i==pb.car?'selected':''}>${esc(o.l)}</option>`).join('')}</select>
+ <label>Legume ou salada</label><select onchange="pb.leg=this.value;pb.n=null;render()"><option value="">Nenhum</option>${((p.pref&&p.pref.leg&&p.pref.leg.length)?p.pref.leg:LEGS).map(l=>`<option ${l==pb.leg?'selected':''}>${esc(l)}</option>`).join('')}</select>
+ <label>Nome da marmita</label><input value="${esc(nm)}" onchange="pb.n=this.value"><div class="g2"><div><label>Peso (g)</label><input inputmode="numeric" value="${pb.w}" onchange="pb.w=parseInt(this.value)||300"></div><div><label>Preço (R$)</label><input inputmode="decimal" value="${pc}" onchange="pb.p=P(this.value)||0"></div></div><div class="mut" style="margin-bottom:8px">Preço sugerido pela proteína. Ajuste como precisar.</div><button class="sec" onclick="addCust()">+ Adicionar à proposta</button></div>
+ <h2>Marmitas da proposta</h2>`+(p.it.length?p.it.map((x,i)=>`<div class="card"><input value="${esc(x.n)}" onchange="pf.it[${i}].n=this.value;render()" style="font-weight:700;margin:0 0 4px"><div class="mut" style="margin-bottom:8px">${esc(x.d||'')}</div><div class="row"><div class="qty"><button class="sec" onclick="pf.it[${i}].q=Math.max(1,pf.it[${i}].q-1);render()">−</button><b>${x.q}</b><button onclick="pf.it[${i}].q++;render()">+</button></div><div style="width:110px"><input inputmode="decimal" value="${x.p}" onchange="pf.it[${i}].p=P(this.value)||0;render()" style="margin:0"></div><button class="x" onclick="pf.it.splice(${i},1);render()" aria-label="Remover">×</button></div></div>`).join(''):`<div class="card mut">Nenhuma marmita ainda.</div>`)+
+ `<div class="card"><div class="row"><span>Subtotal (${T.u})</span><b>${R(T.sub)}</b></div>${T.dv?`<div class="row"><span>Desconto ${T.pct}%</span><b class="in">- ${R(T.dv)}</b></div>`:''}<div class="row"><span>${p.ent=='retirada'?'Retirada':'Frete ('+esc(p.cid)+')'}</span><b>${T.u>=30&&p.ent!='retirada'?'grátis':R(T.u?T.fre:0)}</b></div><div class="row"><span>Total</span><b class="big">${R(T.tot)}</b></div>${T.min?'<div class="chip a" style="margin-top:8px">Entrega exige no mínimo 6 unidades</div>':''}</div>
+ <div class="card"><label>Observação para o cliente (opcional)</label><textarea oninput="pf.obs=this.value" placeholder="Ex.: sem pimenta, frango bem desfiado...">${esc(p.obs||'')}</textarea><label>Validade (dias)</label><input inputmode="numeric" value="${p.val||7}" onchange="pf.val=parseInt(this.value)||7"></div>
+ <div style="display:grid;gap:8px"><button onclick="propPdf()">📄 Gerar PDF para o cliente</button><button class="sec" onclick="copiaProp()">📋 Copiar texto para WhatsApp</button><button class="sec" onclick="salvaProp()">💾 Salvar proposta</button></div>`}
+
 const SEED=JSON.parse(JSON.stringify(prods)),FR0={...fr};
 let last={},ready=false,tmr=null;
 const stat=t=>{const e=$('st');if(e)e.textContent=t};
-const snap=()=>({clients,prods,cbs,ins,orders,lanc,fr,meta:{seq,sv:2}});
-function apply(m){[['clients',clients],['prods',prods],['cbs',cbs],['ins',ins],['orders',orders],['lanc',lanc]].forEach(([k,a])=>{if(m[k])a.splice(0,a.length,...m[k])});if(m.fr)Object.assign(fr,m.fr);if(m.meta)seq=Math.max(seq,m.meta.seq||0)}
+const snap=()=>({clients,prods,cbs,ins,orders,lanc,props,fr,meta:{seq,sv:2}});
+function apply(m){[['clients',clients],['prods',prods],['cbs',cbs],['ins',ins],['orders',orders],['lanc',lanc],['props',props]].forEach(([k,a])=>{if(m[k])a.splice(0,a.length,...m[k])});if(m.fr)Object.assign(fr,m.fr);if(m.meta)seq=Math.max(seq,m.meta.seq||0)}
 function persist(){if(!ready)return;stat('Salvando...');clearTimeout(tmr);tmr=setTimeout(async()=>{const s=snap();
  for(const k in s){const j=JSON.stringify(s[k]);if(last[k]===j)continue;const {error}=await sb.from('kv').upsert({key:k,value:s[k],by:me,updated_at:new Date().toISOString()});if(error){stat('Sem conexão');return}last[k]=j}stat('Salvo ✓')},500)}
 const _render=render;render=function(){_render();persist()};

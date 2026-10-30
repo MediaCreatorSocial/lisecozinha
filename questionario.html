@@ -61,7 +61,7 @@ const SEC=[
   ['Filé de frango',['Grelhado','Desfiado','Ao molho']],['Sobrecoxa',['Assada','Ao molho']],['Carne moída',['Ao molho','Refogada com temperos']],
   ['Carne bovina',['Em tiras grelhada com cebola','Em tiras grelhada sem cebola','Ao molho','Desfiada ao molho']],['Carne suína',['Grelhada com cebola','Grelhada sem cebola']],['Peixe',['Filé grelhado']]],not:'Não come alguma? Qual?'},
  {k:'car',ic:'🍚',t:'Carboidratos & acompanhamentos',q:'Escolha os que gosta e o modo de preparo.',g:[
-  ['Arroz',['Branco','Integral']],['Batata inglesa',['Purê','Batata rústica']],['Batata doce',['Cozida','Assada']],['Aipim (mandioca)',['Só cozido','Purê de aipim']],['Macarrão',['Branco sem molho, só com azeite','Com molho']]],not:'Não gosta de algum? Qual?'},
+  ['Arroz',['Branco','Integral','Parboilizado']],['Batata inglesa',['Purê','Batata rústica']],['Batata doce',['Cozida','Assada']],['Aipim (mandioca)',['Só cozido','Purê de aipim']],['Macarrão',['Branco sem molho, só com azeite','Com molho']]],not:'Não gosta de algum? Qual?'},
  {k:'leg',ic:'🥦',t:'Legumes, verduras & saladas',q:'Marque os que você mais gosta.',chips:['Brócolis','Cenoura','Abobrinha','Couve-flor','Vagem','Abóbora','Couve','Folhas verdes'],not:'Não gosta de algum? Qual?'},
  {k:'tmp',ic:'🌿',t:'Temperos & observações',q:'Evita algum tempero específico?',chips:['Coentro','Pimenta','Alho','Cebola'],other:'Outro'}];
 const st={nome:'',tel:'',alg:[],algO:'',pro:{},proN:'',car:{},carN:'',leg:[],legN:'',tmp:[],tmpO:'',plano:'',obs:'',site:''};
@@ -74,7 +74,7 @@ SEC.map(s=>`<div class="card"><div class="ti"><div class="ic">${s.ic}</div><h2>$
  (s.chips?`<div class="chips">${s.chips.map(c=>ci(s.k,c)).join('')}</div>`:'')+
  (s.g?s.g.map(([n,o])=>`<div class="grp" data-k="${s.k}" data-n="${esc(n)}"><button class="gh" data-a="grp"><i></i>${n}</button><div class="opts">${o.map(x=>`<button class="opt" data-a="opt" data-v="${esc(x)}">${x}</button>`).join('')}</div></div>`).join(''):'')+
  (s.other?`<label>${s.other}:</label>${tx(s.k+'O','Escreva aqui')}`:'')+(s.not?`<label>${s.not}</label>${tx(s.k+'N','Escreva aqui')}`:'')+
- (s.k=='tmp'?`<label>Seu plano alimentar (gramas de proteína, carboidrato e legumes por refeição)</label><textarea data-t="plano" placeholder="Ex.: 150 g de proteína, 100 g de arroz, 100 g de legumes"></textarea><label>Observações</label><textarea data-t="obs" placeholder="Algo mais que devemos saber?"></textarea>`:'')+`</div>`).join('')+
+ (s.k=='tmp'?`<label>Observações</label><textarea data-t="obs" placeholder="Algo mais que devemos saber?"></textarea>`:'')+`</div>`).join('')+
 `<div class="card"><label class="ck"><input type="checkbox" id="ok"> Autorizo a Lise Cozinha a usar estas informações, inclusive alergias e restrições, para preparar minhas marmitas.</label></div>`;
 const tog=(a,v)=>{const i=a.indexOf(v);i<0?a.push(v):a.splice(i,1)};
 function secoes(s){const j=a=>a.join(', '),gp=o=>Object.keys(o).map(n=>n+(o[n].length?' ('+j(o[n]).toLowerCase()+')':'')),L=a=>a.length?a:['—'];
@@ -86,18 +86,21 @@ function secoes(s){const j=a=>a.join(', '),gp=o=>Object.keys(o).map(n=>n+(o[n].l
  {ic:'🌿',t:'Temperos a evitar',items:tp.length?tp:['Nenhum']}]
  .concat(s.plano?[{ic:'📋',t:'Plano alimentar',items:[s.plano]}]:[]).concat(s.obs?[{ic:'💬',t:'Observações',items:[s.obs]}]:[])}
 function prefTxt(s){return secoes(s).map(x=>x.t+': '+x.items.join('; ')+(x.note?' ('+x.note+')':'')).join('\n')}
-function prefPDF(nome,tel,s,data,logo,ratio){const {jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'a4'});let y=14;
- doc.addImage(logo,'PNG',75,y,60,60*ratio);y+=60*ratio+9;
- doc.setFont('helvetica','bold').setFontSize(18).setTextColor(240,104,56).text('PREFERÊNCIAS ALIMENTARES',105,y,{align:'center'});y+=7;
- doc.setFont('helvetica','normal').setFontSize(10).setTextColor(90).text('Cliente: '+nome+(tel?'  ·  '+tel:'')+'  ·  '+data,105,y,{align:'center'});y+=5;
- doc.setDrawColor(240,104,56).setLineWidth(.6).line(20,y,190,y);y+=9;
- secoes(s).forEach(x=>{if(y>255){doc.addPage();y=18}
-  doc.setFillColor(253,232,220).roundedRect(20,y-5,170,8,2,2,'F');doc.setFont('helvetica','bold').setFontSize(11.5).setTextColor(37,116,68).text(x.t.toUpperCase(),24,y);y+=8;
-  doc.setFont('helvetica','normal').setFontSize(10.5).setTextColor(40);
-  x.items.forEach(i=>{const ls=doc.splitTextToSize('•  '+i,160);if(y+ls.length*5>282){doc.addPage();y=18}doc.text(ls,26,y);y+=ls.length*5+.6});
-  if(x.note){const ls=doc.splitTextToSize(x.note,160);doc.setFont('helvetica','italic').setTextColor(120).text(ls,26,y);y+=ls.length*5}
-  y+=5});
- doc.setFont('helvetica','normal').setFontSize(8.5).setTextColor(140).text('Lise Cozinha  ·  comida saudável entregue na sua porta',105,290,{align:'center'});return doc}
+function prefPDF(nome,tel,s,data,logo,ratio){const {jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'a4'}),OR=[240,104,56],GR=[37,116,68];let y=0;
+ const head=()=>{doc.setFillColor(254,250,241).rect(0,0,210,46,'F');doc.addImage(logo,'PNG',75,7,60,60*ratio);doc.setFillColor(...OR).rect(0,46,210,2.2,'F')};
+ head();doc.setFont('helvetica','bold').setFontSize(17).setTextColor(...OR).text('PREFERÊNCIAS ALIMENTARES',105,60,{align:'center'});
+ doc.setFont('helvetica','normal').setFontSize(10).setTextColor(100).text('Cliente: '+nome+(tel?'  ·  '+tel:'')+'  ·  '+data,105,66.5,{align:'center'});y=78;
+ let x=22;const pl=(t,solid)=>{doc.setFontSize(9.5).setFont('helvetica',solid?'bold':'normal');const w=doc.getTextWidth(t)+7;if(x+w>188){x=22;y+=8.6}
+  if(solid){doc.setFillColor(...GR).roundedRect(x,y-4.6,w,6.6,3.3,3.3,'F');doc.setTextColor(255)}else{doc.setFillColor(253,240,232).setDrawColor(...OR).setLineWidth(.3).roundedRect(x,y-4.6,w,6.6,3.3,3.3,'FD');doc.setTextColor(150,60,20)}
+  doc.text(t,x+3.5,y);x+=w+2.4};
+ secoes(s).forEach(c=>{if(y>252){doc.addPage();y=20}
+  doc.setFillColor(...OR).roundedRect(20,y-4.4,2.6,6,1,1,'F');doc.setFont('helvetica','bold').setFontSize(11.5).setTextColor(...GR).text(c.t.toUpperCase(),25,y);y+=3.2;doc.setDrawColor(232,222,198).setLineWidth(.3).line(20,y,190,y);y+=7.6;x=22;
+  if(c.t=='Plano alimentar'||c.t=='Observações'){doc.setFont('helvetica','normal').setFontSize(10.5).setTextColor(50);const ls=doc.splitTextToSize(c.items[0],164);doc.text(ls,22,y-1);y+=ls.length*5}
+  else c.items.forEach(i=>{const m=i.match(/^(.*) \(([^()]*)\)$/);if(m){pl(m[1],1);m[2].split(', ').forEach(p=>pl(p,0))}else pl(i,0)});
+  if(c.note){y+=8;doc.setFont('helvetica','italic').setFontSize(10).setTextColor(130,50,30).text(c.note,22,y)}
+  y+=13});
+ const n=doc.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);doc.setFont('helvetica','normal').setFontSize(8.5).setTextColor(140).text('Lise Cozinha  ·  comida saudável entregue na sua porta',105,291,{align:'center'})}
+ return doc}
 
 function wpp(s){const L=['*🧡 PREFERÊNCIAS ALIMENTARES*','_Lise Cozinha_','','*Cliente:* '+s.nome];if(s.tel)L.push('*WhatsApp:* '+s.tel);
  secoes(s).forEach(x=>{L.push('','*'+x.ic+' '+x.t+'*');x.items.forEach(i=>L.push('• '+i));if(x.note)L.push('_'+x.note+'_')});L.push('','_Enviado pelo formulário da Lise Cozinha_');return L.join('\n')}
